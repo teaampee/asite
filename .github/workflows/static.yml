@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: 18
 
-        # Step 3: Install dependencies
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
@@ -43,10 +43,12 @@ jobs:
       - name: Build Astro project
         run: npm run build
 
-      # Step 5: Prepare artifact path output
-      - name: Set artifact path
-        id: set-artifact-path
-        run: echo "artifact-path=dist" >> $GITHUB_ENV
+      # Step 5: Upload build artifact
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: astro-build
+          path: dist
 
   # Deploy job
   deploy:
@@ -66,9 +68,9 @@ jobs:
 
       # Step 3: Download build artifact
       - name: Download build artifact
-        uses: actions/download-pages-artifact@v3
+        uses: actions/download-artifact@v3
         with:
-          path: ${{ env.artifact-path }}
+          name: astro-build
 
       # Step 4: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
