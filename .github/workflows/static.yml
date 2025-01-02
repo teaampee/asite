@@ -22,8 +22,6 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
-    outputs:
-      artifact-path: ${{ steps.set-artifact-path.outputs.artifact-path }}
     steps:
       # Step 1: Checkout repository
       - name: Checkout code
@@ -43,11 +41,10 @@ jobs:
       - name: Build Astro project
         run: npm run build
 
-      # Step 5: Upload build artifact
+      # Step 5: Upload build artifact with correct name
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: astro-build
           path: dist
 
   # Deploy job
@@ -58,21 +55,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # Step 1: Checkout repository
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Step 2: Setup GitHub Pages
+      # Step 1: Setup GitHub Pages
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # Step 3: Download build artifact
-      - name: Download build artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: astro-build
-
-      # Step 4: Deploy to GitHub Pages
+      # Step 2: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
