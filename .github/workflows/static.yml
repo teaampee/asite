@@ -1,43 +1,74 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+# Workflow for building and deploying an Astro site to GitHub Pages
+name: Build and Deploy Astro Site to GitHub Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # Trigger on pushes to the main branch
   push:
     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
+  # Allow manual trigger
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Set permissions for GITHUB_TOKEN to deploy to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-path: ${{ steps.set-artifact-path.outputs.artifact-path }}
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@latest
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Build the Astro project
+      - name: Build Astro project
+        run: npm run build
+
+      # Step 5: Prepare artifact path output
+      - name: Set artifact path
+        id: set-artifact-path
+        run: echo "artifact-path=dist" >> $GITHUB_ENV
+
+  # Deploy job
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      # Step 1: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
+
+      # Step 2: Setup GitHub Pages
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+
+      # Step 3: Download build artifact
+      - name: Download build artifact
+        uses: actions/download-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: './dist'
+          path: ${{ env.artifact-path }}
+
+      # Step 4: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
